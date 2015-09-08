@@ -39,7 +39,7 @@ setup(
     # https://packaging.python.org/en/latest/single_source_version.html
     version=verstr,
 
-    description='concat yaml and json files into a Kubernetes List',
+    description='A utility for command line MaaS interrogation',
     long_description=long_description,
 
     # The project's main homepage.

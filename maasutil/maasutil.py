@@ -7,6 +7,28 @@ import yaml, json, sys, os, argparse, logging
 from os.path import expanduser
 import argparse_config
 
+import oauth.oauth as oauth
+import httplib2
+import uuid
+
+def perform_API_request(site, uri, method, key, secret, consumer_key):
+    resource_tok_string = "oauth_token_secret=%s&oauth_token=%s" % (
+        secret, key)
+    resource_token = oauth.OAuthToken.from_string(resource_tok_string)
+    consumer_token = oauth.OAuthConsumer(consumer_key, "")
+
+    oauth_request = oauth.OAuthRequest.from_consumer_and_token(
+        consumer_token, token=resource_token, http_url=site,
+        parameters={'oauth_nonce': uuid.uuid4().get_hex()})
+    oauth_request.sign_request(
+        oauth.OAuthSignatureMethod_PLAINTEXT(), consumer_token,
+        resource_token)
+    headers = oauth_request.to_header()
+    url = "%s%s" % (site, uri)
+    http = httplib2.Http()
+    return http.request(url, method, body=None, headers=headers)
+
+
 class SmartFormatter(argparse.HelpFormatter):
 
     def _split_lines(self, text, width):
@@ -21,16 +43,27 @@ def run():
     home = expanduser("~")
     prog = os.path.basename(__file__)
     cfn = home + '/' + '.' + os.path.splitext(prog)[0] + '.conf'
+    def_url = 'http://localhost/MAAS/api/1.0'
+    def_admin = 'maas'
 
-    p = argparse.ArgumentParser(description="yaml json k8s laundry",
+    p = argparse.ArgumentParser(description="MaaS utility cli",
             formatter_class=SmartFormatter)
 
     # overall app related stuff
     p.add_argument('-p', '--pretty', action='store_true', dest='pretty', default=False)
     p.add_argument('-t', '--type', action='store', dest='output_type',
-            default='yaml',
-            choices=['json','yaml'],
+            default='text',
+            choices=['json','yaml', 'text'],
             help='Output type, json or yaml' )
+
+    # pick up the maas related arguments
+    p.add_argument('-a', '--admin', action='store', dest='admin', default=def_admin,
+        help='This is the maas admin user name')
+    p.add_argument('-u', '--url', action='store', dest='url', default=def_url,
+        help='This is the maas url to connect to')
+    p.add_argument('-k', '--key', action='store', dest='key',
+        help='This is the maas admin api key, it must be declared')
+
     # these are the command line leftovers, the files to process
     p.add_argument('files', nargs='*')
 
@@ -71,36 +104,14 @@ def run():
         f.write(re.sub('\naddminion\n', re.sub('\nsave\n','\n',argparse_config.generate_config(p, args, section='default'))))
         f.close()
 
-    # here we go, start of program here
-    s_out = { "apiVersion":"v1", "kind":"List", "items":[] }
+    print "got here"
+    kp = args.key.split(':')
+    response = perform_API_request(args.url, '/nodes/?op=list', 'GET', kp[1], kp[2], kp[0])
 
-    av = args.files
-    if len(av) > 0:
-        for i in range(len(av)):
-            i_file = None
-            if av[i] == '-':
-                i_file = sys.stdin
-            else:
-                i_file = open(av[i])
-            s_out['items'].append(yaml.load(i_file.read()))
-    else:
-        logging.debug("no arguments specified, stdin assumed")
-        s_out['items'].append(yaml.load(sys.stdin))
 
-    # if we are only messing with a single file...
-    s = s_out
-    if len(av) < 2:
-        s = s_out['items'][0]
+    print "response "+response[1]
 
-    if args.output_type == 'yaml':
-        print yaml.dump(s)
-    elif args.output_type == 'json':
-        if args.pretty:
-            print json.dumps(s, sort_keys=True, indent=4, separators=(',', ': '))
-        else:
-            print json.dumps(s)
-    else:
-        raise ValueError('Invalid output type : %s', args.output_type)
+    sys.exit(0)
 
 if __name__ == '__main__':
    run()
