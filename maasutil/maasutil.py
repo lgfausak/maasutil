@@ -3,7 +3,7 @@
 # p.py file1 file2 file3
 # produces all files on output wrapped by an enclosing list
 
-import yaml, json, sys, os, argparse, logging
+import yaml, json, sys, os, argparse, logging, re
 from os.path import expanduser
 import argparse_config
 
@@ -13,7 +13,17 @@ import uuid
 
 from jinja2 import Template
 
+#
+# this routine straight from the maas documentation.
+# the key, secret and consumer_key took me
+# a while to figure out.  it turns out that
+# MAAS keys (under account settings in gui)
+# is a tuple secret:consumer_key:key, base64 with two colons marking field boundaries.
+#
+
 def perform_API_request(site, uri, method, key, secret, consumer_key):
+    logging.debug('perform_API_request :%s,%s,%s', site, uri, method)
+    #logging.debug('SECRET :%s,%s,%s', key, secret, consumer_key)
     resource_tok_string = "oauth_token_secret=%s&oauth_token=%s" % (
         secret, key)
     resource_token = oauth.OAuthToken.from_string(resource_tok_string)
@@ -47,6 +57,7 @@ def run():
     cfn = home + '/' + '.' + os.path.splitext(prog)[0] + '.conf'
     def_url = 'http://localhost/MAAS/api/1.0'
     def_admin = 'maas'
+    def_key = 'null'
 
     p = argparse.ArgumentParser(description="MaaS utility cli",
             formatter_class=SmartFormatter)
@@ -55,19 +66,16 @@ def run():
     p.add_argument('-p', '--pretty', action='store_true', dest='pretty', default=False)
     p.add_argument('-t', '--type', action='store', dest='output_type',
             default='text',
-            choices=['json','yaml', 'text'],
-            help='Output type, json or yaml' )
+            choices=['json','yaml','text'],
+            help='Output type, json, yaml or text' )
 
     # pick up the maas related arguments
     p.add_argument('-a', '--admin', action='store', dest='admin', default=def_admin,
-        help='This is the maas admin user name')
+            help='This is the maas admin user name, default :' + def_admin)
     p.add_argument('-u', '--url', action='store', dest='url', default=def_url,
-        help='This is the maas url to connect to')
+            help='This is the maas url to connect to, default : ' + def_url)
     p.add_argument('-k', '--key', action='store', dest='key',
-        help='This is the maas admin api key, it must be declared')
-
-    # these are the command line leftovers, the files to process
-    p.add_argument('files', nargs='*')
+            help='This is the maas admin api key, default :' + def_key)
 
     # non application related stuff
     p.add_argument('-l', '--loglevel', action='store', dest='loglevel',
@@ -75,7 +83,7 @@ def run():
             choices=['DEBUG','INFO','WARNING','ERROR','CRITICAL'],
             help='Log level (DEBUG,INFO,WARNING,ERROR,CRITICAL) default is: '+loglevel)
     p.add_argument('-s', '--save', action='store_true', dest='save',
-            default=False, help='save select command line arguments (default is always) in "'+cfn+'" file')
+            default=False, help='save select command line arguments (default is never) in "'+cfn+'" file')
 
     # read in defaults from ~/.PROGBASENAMENOSUFFIX
     # if the file exists
@@ -102,14 +110,14 @@ def run():
     # save to the defaults file if a -s specified on command line
     if args.save:
         f = open(cfn, 'w')
-        # remove the 'save' from the file
-        f.write(re.sub('\naddminion\n', re.sub('\nsave\n','\n',argparse_config.generate_config(p, args, section='default'))))
+        apc = re.sub('\nsave\n','\n', argparse_config.generate_config(p, args, section='default'))
+        f.write(apc)
         f.close()
 
-    kp = args.key.split(':')
-    response = perform_API_request(args.url, '/nodes/?op=list', 'GET', kp[1], kp[2], kp[0])
-    rd = json.loads(response[1])
-    print "response "+json.dumps(rd)
+    #kp = args.key.split(':')
+    #response = perform_API_request(args.url, '/nodes/?op=list', 'GET', kp[1], kp[2], kp[0])
+    #rd = json.loads(response[1])
+    #print "response "+json.dumps(rd)
 
     sys.exit(0)
 
