@@ -11,6 +11,8 @@ import oauth.oauth as oauth
 import httplib2
 import uuid
 
+from jinja2 import Template
+
 def perform_API_request(site, uri, method, key, secret, consumer_key):
     resource_tok_string = "oauth_token_secret=%s&oauth_token=%s" % (
         secret, key)
@@ -104,12 +106,10 @@ def run():
         f.write(re.sub('\naddminion\n', re.sub('\nsave\n','\n',argparse_config.generate_config(p, args, section='default'))))
         f.close()
 
-    print "got here"
     kp = args.key.split(':')
     response = perform_API_request(args.url, '/nodes/?op=list', 'GET', kp[1], kp[2], kp[0])
-
-
-    print "response "+response[1]
+    rd = json.loads(response[1])
+    print "response "+json.dumps(rd)
 
     sys.exit(0)
 
