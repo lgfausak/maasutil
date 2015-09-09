@@ -58,7 +58,6 @@ def run():
     def_url = 'http://localhost/MAAS/api/1.0'
     def_admin = 'maas'
     def_key = 'null'
-    def_filename = '-'
 
     p = argparse.ArgumentParser(description="MaaS utility cli",
             formatter_class=SmartFormatter)
@@ -78,14 +77,19 @@ def run():
     p.add_argument('-k', '--key', action='store', dest='key',
             help='This is the maas admin api key, default :' + def_key)
 
-    p.add_argument('-f', '--file', action='store', dest='filename', default=def_filename,
-            help='This is the jinja2 template file (- for stdin), default : ' + def_filename)
+    p.add_argument('-f', '--file', action='store', dest='filename', required=True,
+            help='This is the jinja2 template file : ')
 
     # non application related stuff
     p.add_argument('-l', '--loglevel', action='store', dest='loglevel',
             default=loglevel,
             choices=['DEBUG','INFO','WARNING','ERROR','CRITICAL'],
             help='Log level (DEBUG,INFO,WARNING,ERROR,CRITICAL) default is: '+loglevel)
+
+    # this argument saves the current argument list
+    # in a .maasutil.conf file in the current user's home
+    # directory.  This does put a api key in that file, so,
+    # in secure environment this shouldn't be used
     p.add_argument('-s', '--save', action='store_true', dest='save',
             default=False, help='save select command line arguments (default is never) in "'+cfn+'" file')
 
@@ -133,7 +137,7 @@ def run():
     td = Template(template_text)
     tr = td.render(src=rd)
 
-    print tr
+    print tr,
 
     sys.exit(0)
 
