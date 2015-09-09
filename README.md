@@ -1,5 +1,5 @@
 # maasutil
-[![Version](https://pypip.in/version/maasutil/badge.svg)![Status](https://pypip.in/status/maasutil/badge.svg)![Downloads](https://pypip.in/download/maasutil/badge.svg)](https://pypi.python.org/pypi/maasutil/)[![Build Status](https://travis-ci.org/lgfausak/maasutil.svg?branch=master)](https://travis-ci.org/lgfausak/maasutil)
+[![Package](https://badge.fury.io/py/maasutil.svg)][![Build Status](https://travis-ci.org/lgfausak/maasutil.svg?branch=master)](https://travis-ci.org/lgfausak/maasutil)
 
 maas utility for a 1.8 maas region installation
 
