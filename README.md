@@ -1,6 +1,7 @@
 # maasutil
 [![Package](https://badge.fury.io/py/maasutil.svg)](https://pypi.python.org/pypi/maasutil)
 [![Build Status](https://travis-ci.org/lgfausak/maasutil.svg?branch=master)](https://travis-ci.org/lgfausak/maasutil)
+[![Coverage Status](https://coveralls.io/repos/lgfausak/maasutil/badge.svg?branch=master&service=github)](https://coveralls.io/github/lgfausak/maasutil?branch=master)
 
 
 maas utility for a 1.8 maas region installation
