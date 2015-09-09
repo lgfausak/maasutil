@@ -1,2 +1,2 @@
-{% for hostrec in src %}{{ hostrec.hostname }}, {{ hostrec.system_id }}
+{% for h in src %}{{ h.hostname }}, {{ h.netboot }}, {{ h.system_id }}, {{ h.status }}
 {% endfor %}
