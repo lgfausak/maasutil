@@ -77,8 +77,13 @@ def run():
     p.add_argument('-k', '--key', action='store', dest='key',
             help='This is the maas admin api key, default :' + def_key)
 
-    p.add_argument('-f', '--file', action='store', dest='filename', required=True,
+    p.add_argument('-f', '--file', action='store', dest='filename',
             help='This is the jinja2 template file : ')
+    p.add_argument('-T', '--template', action='store', dest='template',
+            help='This is the jinja2 template text : ')
+
+    p.add_argument('-c', '--command', action='store', dest='command', required=True,
+            help='This is the maas uri, e.g. /nodes/?op=list : ')
 
     # non application related stuff
     p.add_argument('-l', '--loglevel', action='store', dest='loglevel',
@@ -92,6 +97,10 @@ def run():
     # in secure environment this shouldn't be used
     p.add_argument('-s', '--save', action='store_true', dest='save',
             default=False, help='save select command line arguments (default is never) in "'+cfn+'" file')
+
+    #
+    # ok, now the commands
+    #
 
     # read in defaults from ~/.PROGBASENAMENOSUFFIX
     # if the file exists
@@ -109,6 +118,27 @@ def run():
         raise ValueError('Invalid log level: %s', loglevel)
     logging.basicConfig(level=numeric_level)
 
+    #
+    # this logic requires -f or -T argument, if both are specified
+    # a warning is issued, if neither we exit.  Otherwise, we load
+    # template_text with the template from either a file or a command line.
+    #
+    if not args.filename and not args.template:
+        raise RuntimeError('Must supply either -f templatefile or -T templatetext')
+    if args.filename and args.template:
+        logging.warning('BOTH -f and -T specified, -T will override -f!!')
+    template_text = ''
+    if args.template:
+        template_text = args.template
+        logging.debug("Command line template text: \n%s\n", template_text)
+    else:
+        try:
+            template_file = open(args.filename, 'r')
+            template_text = template_file.read()
+            logging.debug("Template file (%s): \n%s\n", args.filename, template_text)
+        except Exception as e:
+            logging.fatal('Error with template file %s:[%s]', args.filename, str(e))
+
     logging.info('Program starting :%s', prog)
     logging.debug('Arg: pretty     :%s', args.pretty)
     logging.debug('Arg: type       :%s', args.output_type)
@@ -116,24 +146,24 @@ def run():
     logging.debug('Arg: admin      :%s', args.admin)
     logging.debug('Arg: url        :%s', args.url)
     logging.debug('Arg: filename   :%s', args.filename)
+    logging.debug('Arg: template   :%s', args.template)
+    logging.debug('Arg: command    :%s', args.command)
     logging.debug('Arg: save       :%s', args.save)
 
     # save to the defaults file if a -s specified on command line
     if args.save:
         f = open(cfn, 'w')
-        apc = re.sub('\nsave\n','\n', argparse_config.generate_config(p, args, section='default'))
+        apc = re.sub('\nsave\n','\n',
+            argparse_config.generate_config(p, args, section='default'))
         f.write(apc)
         f.close()
 
     # rd contains the dictionary
     kp = args.key.split(':')
-    response = perform_API_request(args.url, '/nodes/?op=list', 'GET', kp[1], kp[2], kp[0])
+    response = perform_API_request(args.url, args.command, 'GET', kp[1], kp[2], kp[0])
     rd = json.loads(response[1])
 
     # td comtains the template
-    with open(args.filename, 'r') as template_file:
-        template_text = template_file.read()
-        logging.debug("Template file (%s): \n%s\n", args.filename, template_text)
     td = Template(template_text)
     tr = td.render(src=rd)
 
