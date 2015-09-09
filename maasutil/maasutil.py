@@ -161,7 +161,12 @@ def run():
     # rd contains the dictionary
     kp = args.key.split(':')
     response = perform_API_request(args.url, args.command, 'GET', kp[1], kp[2], kp[0])
-    rd = json.loads(response[1])
+    logging.debug("response header :%s", response[0])
+    logging.debug("response content :%s", response[1])
+    try:
+        rd = json.loads(response[1])
+    except:
+        rd = []
 
     # td comtains the template
     td = Template(template_text)
