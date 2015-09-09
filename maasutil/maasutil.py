@@ -118,26 +118,28 @@ def run():
         raise ValueError('Invalid log level: %s', loglevel)
     logging.basicConfig(level=numeric_level)
 
-    #
-    # this logic requires -f or -T argument, if both are specified
-    # a warning is issued, if neither we exit.  Otherwise, we load
-    # template_text with the template from either a file or a command line.
-    #
-    if not args.filename and not args.template:
-        raise RuntimeError('Must supply either -f templatefile or -T templatetext')
-    if args.filename and args.template:
-        logging.warning('BOTH -f and -T specified, -T will override -f!!')
-    template_text = ''
-    if args.template:
-        template_text = args.template
-        logging.debug("Command line template text: \n%s\n", template_text)
-    else:
-        try:
-            template_file = open(args.filename, 'r')
-            template_text = template_file.read()
-            logging.debug("Template file (%s): \n%s\n", args.filename, template_text)
-        except Exception as e:
-            logging.fatal('Error with template file %s:[%s]', args.filename, str(e))
+    # if json or yaml output is selected, then we don't need a template
+    if not args.output_type == 'yaml' and not args.output_type == 'json':
+        #
+        # this logic requires -f or -T argument, if both are specified
+        # a warning is issued, if neither we exit.  Otherwise, we load
+        # template_text with the template from either a file or a command line.
+        #
+        if not args.filename and not args.template:
+            raise RuntimeError('Must supply either -f templatefile or -T templatetext')
+        if args.filename and args.template:
+            logging.warning('BOTH -f and -T specified, -T will override -f!!')
+        template_text = ''
+        if args.template:
+            template_text = args.template
+            logging.debug("Command line template text: \n%s\n", template_text)
+        else:
+            try:
+                template_file = open(args.filename, 'r')
+                template_text = template_file.read()
+                logging.debug("Template file (%s): \n%s\n", args.filename, template_text)
+            except Exception as e:
+                logging.fatal('Error with template file %s:[%s]', args.filename, str(e))
 
     logging.info('Program starting :%s', prog)
     logging.debug('Arg: pretty     :%s', args.pretty)
@@ -168,9 +170,11 @@ def run():
     except:
         rd = []
 
-    # td comtains the template
-    td = Template(template_text)
-    tr = td.render(src=rd)
+    if args.output_type == 'text':
+        td = Template(template_text)
+        tr = td.render(src=rd)
+    else:
+        tr = ''
 
     print tr,
 
