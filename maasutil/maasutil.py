@@ -58,6 +58,7 @@ def run():
     def_url = 'http://localhost/MAAS/api/1.0'
     def_admin = 'maas'
     def_key = 'null'
+    def_filename = '-'
 
     p = argparse.ArgumentParser(description="MaaS utility cli",
             formatter_class=SmartFormatter)
@@ -76,6 +77,9 @@ def run():
             help='This is the maas url to connect to, default : ' + def_url)
     p.add_argument('-k', '--key', action='store', dest='key',
             help='This is the maas admin api key, default :' + def_key)
+
+    p.add_argument('-f', '--file', action='store', dest='filename', default=def_filename,
+            help='This is the jinja2 template file (- for stdin), default : ' + def_filename)
 
     # non application related stuff
     p.add_argument('-l', '--loglevel', action='store', dest='loglevel',
@@ -105,6 +109,9 @@ def run():
     logging.debug('Arg: pretty     :%s', args.pretty)
     logging.debug('Arg: type       :%s', args.output_type)
     logging.debug('Arg: loglevel   :%s', loglevel)
+    logging.debug('Arg: admin      :%s', args.admin)
+    logging.debug('Arg: url        :%s', args.url)
+    logging.debug('Arg: filename   :%s', args.filename)
     logging.debug('Arg: save       :%s', args.save)
 
     # save to the defaults file if a -s specified on command line
@@ -114,10 +121,19 @@ def run():
         f.write(apc)
         f.close()
 
-    #kp = args.key.split(':')
-    #response = perform_API_request(args.url, '/nodes/?op=list', 'GET', kp[1], kp[2], kp[0])
-    #rd = json.loads(response[1])
-    #print "response "+json.dumps(rd)
+    # rd contains the dictionary
+    kp = args.key.split(':')
+    response = perform_API_request(args.url, '/nodes/?op=list', 'GET', kp[1], kp[2], kp[0])
+    rd = json.loads(response[1])
+
+    # td comtains the template
+    with open(args.filename, 'r') as template_file:
+        template_text = template_file.read()
+        logging.debug("Template file (%s): \n%s\n", args.filename, template_text)
+    td = Template(template_text)
+    tr = td.render(src=rd)
+
+    print tr
 
     sys.exit(0)
 
