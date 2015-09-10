@@ -10,7 +10,7 @@ install:
 # command to run tests
 script:
   - coverage run --source maasutil/maasutil.py maasutil/maasutil.py --help
-  - coverage run --append --source maasutil/maasutil.py maasutil/maasutil.py -u 'http://localhost/TEST' -t text -k '4:3:1' -l WARNING -c  '/nodes/?op=list' -T 'TEST'
+  - coverage run --append --source maasutil/maasutil.py maasutil/maasutil.py -u 'http://www.google.com/' -t text -k '4:3:1' -l WARNING -c  '/nodes/?op=list' -T 'TEST'
 after_success:
   coveralls
 branches:
