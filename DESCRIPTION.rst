@@ -67,6 +67,23 @@ Arguments
    done. By the way, SAVE IS INSECURE! It can right the command line
    'KEY' to the file. You've been warned!
 
+Rationale
+---------
+
+I needed a generic interface between the data that is returned by the
+MaaS api, and Ansible. For example, there are a couple of things I want
+to be able to do with Ansible. \* Dynamic inventory (from maas) \*
+Deploy machines (from maas)
+
+To implement these types of plays in Ansible, I need a simple way of
+reaching into the MaaS api, prefereably on the command line, to access
+from Ansible playbooks. Rather than writing one script for each piece of
+data I needed, I decided to write a general REST api to template
+program. The REST api must return json. The template is a jinja2
+template which can take arbitrarily json and convert it to any format.
+It can do filtering as well. So while this is written specifically for
+MaaS, it will work with any REST interface that returns json.
+
 Notes
 -----
 
