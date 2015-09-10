@@ -6,6 +6,7 @@
 import yaml, json, sys, os, argparse, logging, re
 from os.path import expanduser
 import argparse_config
+from __init__ import __version__
 
 import oauth.oauth as oauth
 import httplib2
@@ -76,6 +77,10 @@ def run():
             help='This is the maas uri, e.g. /nodes/?op=list : ')
 
     # non application related stuff
+    p.add_argument('-v', '--version', action='store_true', dest='version',
+            default=False,
+            help='this switch will just return the version and exit, current version is : ' + __version__)
+
     p.add_argument('-l', '--loglevel', action='store', dest='loglevel',
             default=loglevel,
             choices=['DEBUG','INFO','WARNING','ERROR','CRITICAL'],
@@ -103,6 +108,10 @@ def run():
     if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: %s', loglevel)
     logging.basicConfig(level=numeric_level)
+
+    if args.version:
+        print __version__
+        sys.exit(0)
 
     # save to the defaults file if a -s specified on command line
     if args.save:
