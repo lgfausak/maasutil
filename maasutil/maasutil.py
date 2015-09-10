@@ -56,22 +56,12 @@ def run():
     prog = os.path.basename(__file__)
     cfn = home + '/' + '.' + os.path.splitext(prog)[0] + '.conf'
     def_url = 'http://localhost/MAAS/api/1.0'
-    def_admin = 'maas'
     def_key = 'null'
 
     p = argparse.ArgumentParser(description="MaaS utility cli",
             formatter_class=SmartFormatter)
 
-    # overall app related stuff
-    p.add_argument('-p', '--pretty', action='store_true', dest='pretty', default=False)
-    p.add_argument('-t', '--type', action='store', dest='output_type',
-            default='text',
-            choices=['json','yaml','text'],
-            help='Output type, json, yaml or text' )
-
     # pick up the maas related arguments
-    p.add_argument('-a', '--admin', action='store', dest='admin', default=def_admin,
-            help='This is the maas admin user name, default :' + def_admin)
     p.add_argument('-u', '--url', action='store', dest='url', default=def_url,
             help='This is the maas url to connect to, default : ' + def_url)
     p.add_argument('-k', '--key', action='store', dest='key',
@@ -79,10 +69,10 @@ def run():
 
     p.add_argument('-f', '--file', action='store', dest='filename',
             help='This is the jinja2 template file : ')
-    p.add_argument('-T', '--template', action='store', dest='template',
+    p.add_argument('-t', '--template', action='store', dest='template',
             help='This is the jinja2 template text : ')
 
-    p.add_argument('-c', '--command', action='store', dest='command', required=True,
+    p.add_argument('-c', '--command', action='store', dest='command',
             help='This is the maas uri, e.g. /nodes/?op=list : ')
 
     # non application related stuff
@@ -97,10 +87,6 @@ def run():
     # in secure environment this shouldn't be used
     p.add_argument('-s', '--save', action='store_true', dest='save',
             default=False, help='save select command line arguments (default is never) in "'+cfn+'" file')
-
-    #
-    # ok, now the commands
-    #
 
     # read in defaults from ~/.PROGBASENAMENOSUFFIX
     # if the file exists
@@ -118,47 +104,43 @@ def run():
         raise ValueError('Invalid log level: %s', loglevel)
     logging.basicConfig(level=numeric_level)
 
-    # if json or yaml output is selected, then we don't need a template
-    if not args.output_type == 'yaml' and not args.output_type == 'json':
-        #
-        # this logic requires -f or -T argument, if both are specified
-        # a warning is issued, if neither we exit.  Otherwise, we load
-        # template_text with the template from either a file or a command line.
-        #
-        if not args.filename and not args.template:
-            raise RuntimeError('Must supply either -f templatefile or -T templatetext')
-        if args.filename and args.template:
-            logging.warning('BOTH -f and -T specified, -T will override -f!!')
-        template_text = ''
-        if args.template:
-            template_text = args.template
-            logging.debug("Command line template text: \n%s\n", template_text)
-        else:
-            try:
-                template_file = open(args.filename, 'r')
-                template_text = template_file.read()
-                logging.debug("Template file (%s): \n%s\n", args.filename, template_text)
-            except Exception as e:
-                logging.fatal('Error with template file %s:[%s]', args.filename, str(e))
-
-    logging.info('Program starting :%s', prog)
-    logging.debug('Arg: pretty     :%s', args.pretty)
-    logging.debug('Arg: type       :%s', args.output_type)
-    logging.debug('Arg: loglevel   :%s', loglevel)
-    logging.debug('Arg: admin      :%s', args.admin)
-    logging.debug('Arg: url        :%s', args.url)
-    logging.debug('Arg: filename   :%s', args.filename)
-    logging.debug('Arg: template   :%s', args.template)
-    logging.debug('Arg: command    :%s', args.command)
-    logging.debug('Arg: save       :%s', args.save)
-
     # save to the defaults file if a -s specified on command line
     if args.save:
+        logging.info('Saving arguments to :%s', cfn)
         f = open(cfn, 'w')
         apc = re.sub('\nsave\n','\n',
             argparse_config.generate_config(p, args, section='default'))
         f.write(apc)
         f.close()
+
+    #
+    # this logic requires -f or -t argument, if both are specified
+    # a warning is issued, if neither we exit.  Otherwise, we load
+    # template_text with the template from either a file or a command line.
+    #
+    if not args.filename and not args.template:
+        raise RuntimeError('Must supply either -f templatefile or -t templatetext')
+    if args.filename and args.template:
+        logging.warning('BOTH -f and -t specified, -t will override -f!!')
+    template_text = ''
+    if args.template:
+        template_text = args.template
+        logging.debug("Command line template text: \n%s\n", template_text)
+    else:
+        try:
+            template_file = open(args.filename, 'r')
+            template_text = template_file.read()
+            logging.debug("Template file (%s): \n%s\n", args.filename, template_text)
+        except Exception as e:
+            logging.fatal('Error with template file %s:[%s]', args.filename, str(e))
+
+    logging.info('Program starting :%s', prog)
+    logging.debug('Arg: loglevel   :%s', loglevel)
+    logging.debug('Arg: url        :%s', args.url)
+    logging.debug('Arg: filename   :%s', args.filename)
+    logging.debug('Arg: template   :%s', args.template)
+    logging.debug('Arg: command    :%s', args.command)
+    logging.debug('Arg: save       :%s', args.save)
 
     # rd contains the dictionary
     kp = args.key.split(':')
@@ -170,11 +152,8 @@ def run():
     except:
         rd = []
 
-    if args.output_type == 'text':
-        td = Template(template_text)
-        tr = td.render(src=rd)
-    else:
-        tr = ''
+    td = Template(template_text)
+    tr = td.render(src=rd)
 
     print tr,
 
