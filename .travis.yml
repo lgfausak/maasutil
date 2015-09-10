@@ -5,10 +5,12 @@ python:
 install:
   - "pip install -r requirements.txt"
   - pip install nose coverage
+  - pip install coveralls
   - python setup.py install
 # command to run tests
 script:
   - nosetests
+  - coverage run setup.py test
 after_success:
   coveralls
 branches:
