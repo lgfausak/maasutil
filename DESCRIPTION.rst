@@ -1,8 +1,7 @@
 maasutil
 ========
 
-`|Version|\ |Status|\ |Downloads| <https://pypi.python.org/pypi/maasutil/>`__\ |Build
-Status|
+|Package| |Build Status| |Coverage Status|
 
 maas utility for a 1.8 maas region installation
 
@@ -59,8 +58,9 @@ Examples
 
     maasutil.py node_by_name
 
-.. |Version| image:: https://pypip.in/version/maasutil/badge.svg
-.. |Status| image:: https://pypip.in/status/maasutil/badge.svg
-.. |Downloads| image:: https://pypip.in/download/maasutil/badge.svg
+.. |Package| image:: https://badge.fury.io/py/maasutil.svg
+   :target: https://pypi.python.org/pypi/maasutil
 .. |Build Status| image:: https://travis-ci.org/lgfausak/maasutil.svg?branch=master
    :target: https://travis-ci.org/lgfausak/maasutil
+.. |Coverage Status| image:: https://coveralls.io/repos/lgfausak/maasutil/badge.svg?branch=master&service=github
+   :target: https://coveralls.io/github/lgfausak/maasutil?branch=master
