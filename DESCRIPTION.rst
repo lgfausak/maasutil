@@ -16,9 +16,9 @@ Usage
 
 ::
 
-    usage: maasutil.py [-h] [-u URL] [-k KEY] [-f FILENAME]
-                       [-t TEMPLATE] -c COMMAND
-                       [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [-s]
+    usage: maasutil.py [-h] [-u URL] [-k KEY] [-f FILENAME] [-t TEMPLATE]
+                       [-c COMMAND] [-v] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
+                       [-s]
 
     MaaS utility cli
 
@@ -33,6 +33,8 @@ Usage
                             This is the jinja2 template text :
       -c COMMAND, --command COMMAND
                             This is the maas uri, e.g. /nodes/?op=list :
+      -v, --version         this switch will just return the version and exit,
+                            current version is : 0.0.19
       -l {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --loglevel {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                             Log level (DEBUG,INFO,WARNING,ERROR,CRITICAL) default
                             is: INFO
@@ -59,7 +61,8 @@ Arguments
 -  --template, the actual `jinja2 <http://jinja.pocoo.org/docs/dev/>`__
    template text
 -  --help, the usage message is printed.
--  ---loglevel, for debugging, default INFO.
+-  --version, print the version and exit
+-  --loglevel, for debugging, default INFO.
 -  --save, save current arguments to persistent file in home directory,
    this file will be read as if it came from the command line in
    subsequent invocations of this program. To remove it you have to
