@@ -1,0 +1,30 @@
+{#
+## t-nodeslist	- template to product a text list of nodes
+##
+## src = /nodes/?op=list
+##
+## output
+##  hostname,system_id,status,textstatus
+##
+#}
+
+{%- for h in src -%}
+	{{- h.hostname -}},
+	{{- h.system_id -}},
+	{{- h.status -}},
+	{%- if h.status == 1 -%}
+		commissioning
+	{%- elif h.status == 2 -%}
+		2
+	{%- elif h.status == 3 -%}
+		3
+	{%- elif h.status == 4 -%}
+		ready
+	{%- elif h.status == 5 -%}
+		5
+	{%- elif h.status == 6 -%}
+		deployed
+	{%- else -%}
+		unknown
+	{%- endif %}
+{% endfor -%}
