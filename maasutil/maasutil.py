@@ -71,7 +71,7 @@ def run():
     p.add_argument('-f', '--file', action='store', dest='filename',
             help='This is the jinja2 template file : ')
     p.add_argument('-t', '--template', action='store', dest='template',
-            help='This is the jinja2 template text : ')
+            help='This is the template text on the command line, or use the word RAW for raw json output')
 
     p.add_argument('-c', '--command', action='store', dest='command',
             help='This is the maas uri, e.g. /nodes/?op=list : ')
@@ -161,10 +161,13 @@ def run():
     except:
         rd = []
 
-    td = Template(template_text)
-    tr = td.render(src=rd)
+    if template_text == 'RAW':
+        print json.dumps(rd)
+    else:
+        td = Template(template_text)
+        tr = td.render(src=rd)
 
-    print tr,
+        print tr,
 
     sys.exit(0)
 
