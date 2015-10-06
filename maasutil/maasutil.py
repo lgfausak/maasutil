@@ -58,6 +58,7 @@ def run():
     cfn = home + '/' + '.' + os.path.splitext(prog)[0] + '.conf'
     def_url = 'http://localhost/MAAS/api/1.0'
     def_key = 'null'
+    def_command = '/nodes/?op=list'
 
     p = argparse.ArgumentParser(description="MaaS utility cli",
             formatter_class=SmartFormatter)
@@ -72,9 +73,10 @@ def run():
             help='This is the jinja2 template file : ')
     p.add_argument('-t', '--template', action='store', dest='template',
             help='This is the template text on the command line, or use the word RAW for raw json output')
-
-    p.add_argument('-c', '--command', action='store', dest='command',
-            help='This is the maas uri, e.g. /nodes/?op=list : ')
+    p.add_argument('--list', action='store_true', dest='template_list',
+            help='Use this template shortcut to create --list output for ansible (dynamic inventory)')
+    p.add_argument('-c', '--command', action='store', dest='command', default=def_command,
+            help='This is the maas uri, e.g. /nodes/?op=list, default : ' + def_command)
 
     # non application related stuff
     p.add_argument('-v', '--version', action='store_true', dest='version',
@@ -127,6 +129,75 @@ def run():
     # a warning is issued, if neither we exit.  Otherwise, we load
     # template_text with the template from either a file or a command line.
     #
+    if args.template_list:
+      args.template = '''
+{#
+## t-nodeslist	- template to product a text list of nodes
+##
+## src = /nodes/?op=list
+##
+## output
+##  hostname,system_id,status,textstatus
+##
+#}
+
+{
+    {# a goofy way to come up with a unique list of tags #}
+    {%- set gname = [] -%}
+    {%- for h in src -%}
+      {%- for i in h.tag_names -%}
+        {%- if not i in gname -%}
+          {%- set _ = gname.append(i) -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endfor -%}
+
+    {%- for i in gname -%}
+      "{{i}}": {
+        "hosts" : [
+        {%- set lcomma = '' -%}
+        {%- for h in src -%}
+          {%- if i in h.tag_names -%}
+            {{lcomma}}"{{ h.hostname -}}"
+            {%- set lcomma = ',' -%}
+          {%- endif -%}
+        {%- endfor -%}
+        ]
+      },
+    {% endfor %}
+
+"_meta": {
+  {% set hcomma='' %}
+  "hostvars" : {
+    {%- for h in src -%}
+	{{hcomma}}"{{ h.hostname -}}" : {
+           "system_id": "{{ h.system_id }}",
+           "status": {{ h.status }},
+           "status_text": 
+	{%- if h.status == 1 -%}
+		"commissioning"
+	{%- elif h.status == 2 -%}
+		"2"
+	{%- elif h.status == 3 -%}
+		"3"
+	{%- elif h.status == 4 -%}
+		"ready"
+	{%- elif h.status == 5 -%}
+		"5"
+	{%- elif h.status == 6 -%}
+		"deployed"
+	{%- else -%}
+		"unknown"
+	{%- endif %}
+        }
+        {% set hcomma=',' %}
+    {% endfor -%}
+  }
+}
+
+}
+'''
+
     if not args.filename and not args.template:
         raise RuntimeError('Must supply either -f templatefile or -t templatetext')
     if args.filename and args.template:
